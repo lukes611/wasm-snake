@@ -1,0 +1,15 @@
+need to be able to write board
+log to test code
+need to be able to store snake + board in memory
+cherry:
+snake:
+    list of points
+    snake length
+    snake ptr
+
+
+init:
+    set snake body data
+    set snake length / ptr
+    set cherry position
+render board function:
