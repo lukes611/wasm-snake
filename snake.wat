@@ -47,7 +47,12 @@
         i32.const 0
         get_local $tmp
         i32.store8
-        get_local $tmp
+        i32.const 555
+        call $log
+        i32.const 0
+        call $getSnakeXByOffset
+        call $log
+        i32.const 500
         return
     )
 
@@ -137,6 +142,8 @@
 
     ;; get block pixel type (0-blank, 1-snake, 2-cherry)
     (func $computePixelState (param $x i32) (param $y i32) (result i32)
+        (local $snakeHeadX i32)
+        (local $snakeHeadY i32)
         get_local $x
         get_local $y
         get_global $cherryX
@@ -144,6 +151,22 @@
         call $posEq
         if
             i32.const 2
+            return
+        end
+        ;; check if snake head
+        i32.const 0 ;; offset
+        call $getSnakeXByOffset
+        set_local $snakeHeadX
+        i32.const 0 ;; offset
+        call $getSnakeYByOffset
+        set_local $snakeHeadY
+        get_local $x
+        get_local $y
+        get_local $snakeHeadX
+        get_local $snakeHeadY
+        call $posEq
+        if
+            i32.const 1
             return
         end
         i32.const 0
@@ -168,8 +191,6 @@
         i32.eqz
         return
     )
-
-
 
     ;; sets a pixel value
     (func $setPixel (param $x i32) (param $y i32) (param $v i32)
@@ -211,7 +232,47 @@
         return
     )
 
-    ;; (func $setSnake)
+    ;; get snakeX by offset
+    (func $getSnakeXByOffset (param $offset i32) (result i32)
+        get_local $offset
+        call $getSnakeXPtrByOffset
+        i32.load8_s
+    )
+    ;; get snakeY by offset
+    (func $getSnakeYByOffset (param $offset i32) (result i32)
+        get_local $offset
+        call $getSnakeYPtrByOffset
+        i32.load8_s
+    )
+    
+    ;; get snakeY ptr by offset
+    (func $getSnakeYPtrByOffset (param $offset i32) (result i32)
+        get_local $offset
+        call $getSnakeXPtrByOffset ;; yes, use x, since y is right after
+        i32.const 1
+        i32.add
+    )
+
+    ;; get snakeX ptr by offset
+    (func $getSnakeXPtrByOffset (param $offset i32) (result i32)
+        (local $tmp i32)
+        (local $maxSnakeLen2 i32)
+        get_global $maxSnakeLen
+        i32.const 2
+        i32.add
+        set_local $maxSnakeLen2
+        ;; x = ptr + ((snakeOffset + offset) * 2) % (maxSnakeLen * 2)
+        get_global $snakeOffset
+        get_local $offset
+        i32.add
+        i32.const 2
+        i32.mul
+        get_local $maxSnakeLen2
+        i32.rem_s
+        call $getSnakeBodyPtr
+        i32.add
+        return
+    )
 
     (func $getSnakeBodyPtr (result i32)
         get_global $boardWidth
