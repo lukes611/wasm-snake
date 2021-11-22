@@ -59,14 +59,19 @@ async function main() {
 
     setInterval(() => {
         instance.exports.tick();
-        // console.log('snake.x = ', snakeData[0]);
         instance.exports.drawBoard();
+        // console.log('offset', instance.exports.snakeOffset.value);
+        // console.log('len', instance.exports.snakeLength.value);
+        // console.log('snake.x = ', snakeData[
+        //     (instance.exports.snakeOffset.value * 2) % instance.exports.maxSnakeLen.value
+        // ]);
         drawBoard();
     }, 200);
-
+    
     setTimeout(() => {
         console.log(instance.exports.snakeDir)
-        instance.exports.snakeDir.value = 1;
+        
+        // instance.exports.snakeDir.value = 1;
     }, 1000);
     document.addEventListener('keydown', (e) => {
         const newDir = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].indexOf(e.key);

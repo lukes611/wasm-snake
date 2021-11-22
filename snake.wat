@@ -105,15 +105,20 @@
         call $getMoveY
         set_local $headY
 
-        i32.const 0
-        call $getSnakeXPtrByOffset
         get_local $headX
-        i32.store8
-
-        i32.const 0
-        call $getSnakeYPtrByOffset
         get_local $headY
-        i32.store8
+        call $snakeUnshift
+        call $snakePop
+        ;; just restoring, instead we want to push
+        ;; i32.const 0
+        ;; call $getSnakeXPtrByOffset
+        ;; get_local $headX
+        ;; i32.store8
+
+        ;; i32.const 0
+        ;; call $getSnakeYPtrByOffset
+        ;; get_local $headY
+        ;; i32.store8
 
 
         ;; set it (later implement push / pop system)
@@ -276,23 +281,15 @@
             i32.const 2
             return
         end
-        ;; check if snake head
-        i32.const 0 ;; offset
-        call $getSnakeXByOffset
-        set_local $snakeHeadX
-        i32.const 0 ;; offset
-        call $getSnakeYByOffset
-        set_local $snakeHeadY
         get_local $x
         get_local $y
-        get_local $snakeHeadX
-        get_local $snakeHeadY
-        call $posEq
+        call $touchingSnake
+        i32.eqz
         if
-            i32.const 1
+            i32.const 0
             return
         end
-        i32.const 0
+        i32.const 1
         return
     )
 
@@ -355,6 +352,73 @@
         return
     )
 
+    ;; check if point collides with snake
+    ;; returns 0 if not touching
+    ;; returns 1 if touching head
+    ;; returns 2 if touching body
+    (func $touchingSnake (param $x i32) (param $y i32) (result i32)
+        (local $i i32)
+        (local $sx i32)
+        (local $sy i32)
+        ;; loop through all snake body parts
+        i32.const 0
+        set_local $i
+        loop $loopStart
+            ;; get snake pos at offset $i
+            get_local $i
+            call $getSnakeXByOffset
+            set_local $sx
+            get_local $i
+            call $getSnakeYByOffset
+            set_local $sy
+
+            ;; if pos equal to x, y
+            get_local $x
+            get_local $y
+            get_local $sx
+            get_local $sy
+            call $posEq
+            if
+                get_local $i
+                i32.eqz
+                if
+                    i32.const 1
+                    return
+                end
+                i32.const 2
+                return
+            end
+
+            ;; increment $i
+            get_local $i
+            i32.const 1
+            i32.add
+            set_local $i
+
+            ;; loop back again if $i < $snakeLength
+            get_local $i
+            get_global $snakeLength
+            i32.lt_s
+            br_if $loopStart
+        end
+        i32.const 0
+        return
+    )
+
+    ;; set snakeX by offset
+    (func $setSnakeXByOffset (param $offset i32) (param $newX i32)
+        get_local $offset
+        call $getSnakeXPtrByOffset
+        get_local $newX
+        i32.store8
+    )
+    ;; set snakeY by offset
+    (func $setSnakeYByOffset (param $offset i32) (param $newY i32)
+        get_local $offset
+        call $getSnakeYPtrByOffset
+        get_local $newY
+        i32.store8
+    )
     ;; get snakeX by offset
     (func $getSnakeXByOffset (param $offset i32) (result i32)
         get_local $offset
@@ -404,6 +468,42 @@
         return
     )
 
+    ;; unshift new x,y position onto snake head
+    (func $snakeUnshift (param $x i32) (param $y i32)
+        ;; decrease offset
+        get_global $snakeOffset
+        i32.const -1
+        get_global $maxSnakeLen
+        call $wrapAdd
+        set_global $snakeOffset
+        ;; increase length
+        get_global $snakeLength
+        i32.const 1
+        i32.add
+        set_global $snakeLength
+        ;; set new position
+        i32.const 0 ;; set head
+        get_local $x
+        call $setSnakeXByOffset
+        i32.const 0 ;; set head
+        get_local $y
+        call $setSnakeYByOffset
+    )
+    ;; pop x,y position from snake tail
+    (func $snakePop
+        ;; increase offset
+        ;; get_global $snakeOffset
+        ;; i32.const 1
+        ;; get_global $maxSnakeLen
+        ;; call $wrapAdd
+        ;; set_global $snakeOffset
+        ;; decrease length
+        get_global $snakeLength
+        i32.const 1
+        i32.sub
+        set_global $snakeLength
+    )
+
     ;; returns 1 if v==a || v == b, else 0
     (func $eqOneOf (param $v i32) (param $a i32) (param $b i32) (result i32)
         get_local $v
@@ -415,6 +515,15 @@
             return
         end
         get_local $v
+        get_local $b
+        i32.sub
+        i32.eqz
+        return
+    )
+
+    ;; returns 1 if a==b, else 0
+    (func $eqTo (param $a i32) (param $b i32) (result i32)
+        get_local $a
         get_local $b
         i32.sub
         i32.eqz
