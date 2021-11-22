@@ -6,15 +6,15 @@
     ;; snake body positions 
     ;; board width & height
 
-    ;; system functionality
-    ;; eg pixelOut(x, y, 2 | 1 | 0) (2=cherry, 1=snake, 0=blank)
-    (import "env" "pixelOut" (func $pixelOut (param i32) (param i32) (param i32)))
     (import "env" "log" (func $log (param i32)))
     (import "env" "random" (func $random (result f32)))
     (import "env" "abort" (func $abort (param i32)))
+    (import "env" "gameOver" (func $gameOver))
 
     (global $boardWidth (import "env" "boardWidth") (mut i32))
     (global $boardHeight (import "env" "boardHeight") (mut i32))
+
+    (global $snakeIsDead (export "snakeIsDead") (mut i32) (i32.const 0))
 
     (global $snakeLength (export "snakeLength") (mut i32) (i32.const 1))
     (global $snakeOffset (export "snakeOffset") (mut i32) (i32.const 0))
@@ -25,43 +25,20 @@
     (global $cherryX (export "cherryX") (mut i32) (i32.const 0))
     (global $cherryY (export "cherryY") (mut i32) (i32.const 0))
     
-    ;; functionality
-    (export "add" (func $add))
-    (func $add (param $a i32) (param $b i32) (result i32)
-        i32.const 0
-        i32.const 2
-        get_global $boardWidth
-        call $pixelOut
-        get_local $a
-        get_local $b
-        i32.add
-        return    
-    )
-
-    (export "test" (func $test))
-    (func $test (param $a i32) (result i32)
-        (local $tmp i32)
-        i32.const 43
-        call $log
-        i32.const 10
-        call $randInt
-        set_local $tmp
-        i32.const 0
-        get_local $tmp
-        i32.store8
-        i32.const 555
-        call $log
-        i32.const 0
-        call $getSnakeXByOffset
-        call $log
-        i32.const 500
-        return
-    )
-
     (export "init" (func $init))
     (func $init
         (local $sptr i32)
         (local $tmp i32)
+        ;; reset game state
+        i32.const 0
+        set_global $snakeIsDead
+        i32.const 1
+        set_global $snakeLength
+        i32.const 0
+        set_global $snakeOffset
+        i32.const 0
+        set_global $snakeDir
+
         ;; set snake head position randomly
         call $getSnakeBodyPtr
         set_local $sptr
@@ -87,6 +64,10 @@
     (func $tick
         (local $headX i32)
         (local $headY i32)
+        get_global $snakeIsDead
+        if ;; if dead -> don't do anything
+            return
+        end
         ;; get new head
         i32.const 0
         call $getSnakeXByOffset
@@ -124,7 +105,24 @@
         else
             call $snakePop
         end
-        
+
+        ;; check if snake died
+        i32.const 0
+        call $getSnakeXByOffset
+        i32.const 0
+        call $getSnakeYByOffset
+        i32.const 1
+        call $touchingSnake
+        i32.const 0
+        i32.ne
+        if ;; if head touching snake body -> you dead
+            call $gameOver
+            i32.const 1
+            set_global $snakeIsDead
+            return
+        end
+
+        call $drawToBuffer
     )
 
     ;; computes a new x, given a movement by 1 in a direction (see snakeDir at top)
@@ -216,8 +214,7 @@
         return
     )
 
-    (export "drawBoard" (func $drawBoard))
-    (func $drawBoard
+    (func $drawToBuffer
         (local $x i32)
         (local $y i32)
         (local $tmp i32)
@@ -278,6 +275,7 @@
     (func $computePixelState (param $x i32) (param $y i32) (result i32)
         get_local $x
         get_local $y
+        i32.const 0
         call $touchingSnake
         i32.const 0
         i32.ne
@@ -364,14 +362,14 @@
 
     ;; check if point collides with snake
     ;; returns 0 if not touching
-    ;; returns 1 if touching head
-    ;; returns 2 if touching body
-    (func $touchingSnake (param $x i32) (param $y i32) (result i32)
+    ;; returns 1 if touching
+    ;; set ignoreHead to 1, to ignore the head
+    (func $touchingSnake (param $x i32) (param $y i32) (param $ignoreHead i32) (result i32)
         (local $i i32)
         (local $sx i32)
         (local $sy i32)
         ;; loop through all snake body parts
-        i32.const 0
+        get_local $ignoreHead
         set_local $i
         loop $loopStart
             ;; get snake pos at offset $i
@@ -389,13 +387,7 @@
             get_local $sy
             call $posEq
             if
-                get_local $i
-                i32.eqz
-                if
-                    i32.const 1
-                    return
-                end
-                i32.const 2
+                i32.const 1
                 return
             end
 
