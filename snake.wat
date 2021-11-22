@@ -19,6 +19,8 @@
     (global $snakeLength (export "snakeLength") (mut i32) (i32.const 1))
     (global $snakeOffset (export "snakeOffset") (mut i32) (i32.const 0))
     (global $maxSnakeLen (export "maxSnakeLen") (mut i32) (i32.const 15))
+    ;; 0-right, 1-down, 2-left, 3-up
+    (global $snakeDir (export "snakeDir") (mut i32) (i32.const 0))
 
     (global $cherryX (export "cherryX") (mut i32) (i32.const 0))
     (global $cherryY (export "cherryY") (mut i32) (i32.const 0))
@@ -81,6 +83,100 @@
         set_global $cherryY
     )
 
+    ;; (export "tick" (func $tick))
+    ;; (func $tick
+    ;;     ;; get new head
+    ;;     ;; set it (later implement push / pop system)
+    ;; )
+
+    ;; computes a new x, given a movement by 1 in a direction (see snakeDir at top)
+    (func $getMoveX (param $oldX i32) (param $direction i32) (result i32)
+        (local $tmp i32)
+        ;; if direction === 1(down) || direction === 3(up), return oldX
+        get_local $direction
+        i32.const 1
+        i32.const 3
+        call $eqOneOf
+        if
+            get_local $oldX
+            return
+        end
+        ;; if direction === 0(right) or direction === 2(left), perform wrapAdd
+        get_local $direction
+        i32.eqz
+        if
+            i32.const 1
+            set_local $tmp
+        else
+            i32.const -1
+            set_local $tmp
+        end
+        get_local $oldX
+        get_local $tmp
+        get_global $boardWidth
+        call $wrapAdd
+        return
+    )
+
+    ;; computes a new y, given a movement by 1 in a direction (see snakeDir at top)
+    (func $getMoveY (param $oldY i32) (param $direction i32) (result i32)
+        (local $tmp i32)
+        ;; if direction === 0(right) || direction === 2(left), return oldY
+        get_local $direction
+        i32.const 0
+        i32.const 2
+        call $eqOneOf
+        if
+            get_local $oldY
+            return
+        end
+        ;; if direction === 1(down) or direction === 3(up), perform wrapAdd
+        get_local $direction
+        i32.const 1
+        i32.sub
+        i32.eqz
+        if
+            i32.const 1
+            set_local $tmp
+        else
+            i32.const -1
+            set_local $tmp
+        end
+        get_local $oldY
+        get_local $tmp
+        get_global $boardHeight
+        call $wrapAdd
+        return
+    )
+
+    ;; performs an addition with wrapping arround -1 and $max
+    ;; note: $inc should only be  -1 or 1
+    ;; eg wrappAdd(2, 1, 3) -> 0
+    ;; eg wrappAdd(1, 1, 3) -> 2
+    ;; eg wrappAdd(1, -1, 3) -> 0
+    ;; eg wrappAdd(0, -1, 3) -> 2
+    (func $wrapAdd (param $v i32) (param $inc i32) (param $max i32) (result i32)
+        (local $tmp i32)
+        get_local $inc
+        get_local $v
+        i32.add
+        get_local $max
+        i32.rem_s
+        set_local $tmp
+        get_local $tmp
+        i32.const -1
+        i32.sub
+        i32.eqz
+        if ;; tmp === -1 -> return max-1
+            get_local $max
+            i32.const 1
+            i32.sub
+            return
+        end
+        get_local $tmp
+        return
+    )
+
     (export "drawBoard" (func $drawBoard))
     (func $drawBoard
         (local $x i32)
@@ -135,9 +231,6 @@
             i32.lt_s
             br_if $yBlock
         end
-        ;; loop y
-        ;; loop x
-
     )
 
     ;; get block pixel type (0-blank, 1-snake, 2-cherry)
@@ -278,6 +371,23 @@
         get_global $boardWidth
         get_global $boardHeight
         i32.mul
+        return
+    )
+
+    ;; returns 1 if v==a || v == b, else 0
+    (func $eqOneOf (param $v i32) (param $a i32) (param $b i32) (result i32)
+        get_local $v
+        get_local $a
+        i32.sub
+        i32.eqz
+        if
+            i32.const 1
+            return
+        end
+        get_local $v
+        get_local $b
+        i32.sub
+        i32.eqz
         return
     )
 )
