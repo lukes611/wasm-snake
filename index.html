@@ -6,16 +6,40 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Wasm Snake</title>
     <style>
-        body { margin: 0; }
+        body {
+            margin: 0;
+            display: grid;
+            grid-auto-flow: column;
+            justify-content: start;
+            gap: 16px;
+            font-family: Arial, Helvetica, sans-serif;
+        }
         canvas {
             width: 300px;
             max-width: 100vw;
         }
+        #code {
+            display: block;
+            max-height: 595px;
+            overflow-y: auto;
+            border: 3px dashed black;
+        }
     </style>
 </head>
 <body>
-    <h2>WebAssembly Snake</h2>
-    <p>(use arrow keys on keyboard to control)</p>
-    <script src="index.js"></script>
+    <div>
+        <h2>WebAssembly Snake</h2>
+        <p>(use arrow keys on keyboard to control)</p>
+        <script src="index.js"></script>
+        <div id="ui"></div>
+    </div>
+    <div>
+        <h2>
+            Code<br/>
+            <a href="https://github.com/lukes611/wasm-snake/blob/master/snake.wat">See wat.</a><br/>
+            <a href="https://github.com/lukes611/wasm-snake/blob/master/index.js">See js.</a>
+        </h2>
+        <code id="code"></code>
+    </div>
 </body>
 </html>

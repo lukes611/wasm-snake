@@ -33,9 +33,6 @@ async function main() {
 
     console.log(instance.exports.init());
 
-    // draw board
-    createRasterRenderer();
-
     setInterval(() => {
         renderer.update();
         instance.exports.tick();
@@ -49,7 +46,8 @@ async function main() {
 
     function createRasterRenderer(W, H, boardData, colorMappings, BS = 20) {
         const canvas = document.createElement('canvas');
-        document.body.appendChild(canvas);
+        const uiContainer = document.getElementById('ui');
+        uiContainer.appendChild(canvas);
 
         const blockSize = BS;
         canvas.width = W * blockSize;
@@ -69,14 +67,15 @@ async function main() {
         };
     }
 
+    const uiContainer = document.getElementById('ui');
     const gameOverMessage = document.createElement('h4');
     gameOverMessage.innerText = 'game over';
-    document.body.appendChild(gameOverMessage);
+    uiContainer.appendChild(gameOverMessage);
     gameOverMessage.style.display = 'none';
     
     const resetGameButton = document.createElement('button');
     resetGameButton.innerText = 'reset';
-    document.body.appendChild(resetGameButton);
+    uiContainer.appendChild(resetGameButton);
     resetGameButton.onclick = () => {
         resetGameButton.style.display = 'none';
         gameOverMessage.style.display = 'none';
@@ -84,5 +83,11 @@ async function main() {
     };
     resetGameButton.style.display = 'none';
 
+    fetch('./snake.wat')
+        .then(r => r.text())
+        .then(txt => {
+            const codeEl = document.getElementById('code');
+            codeEl.innerText = txt;
+        })
 }
 main();
