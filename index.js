@@ -20,7 +20,21 @@ async function main() {
         },
     });
     const boardData = new Uint8Array(memory.buffer);
-    const snakeData = new Int8Array(memory.buffer, boardWidth.value * boardHeight.value);
+    const snakeData = new Int8Array(memory.buffer, boardWidth.value * boardHeight.value + 0);
+
+    // const I = 15;
+    // instance.exports.init();
+    // instance.exports.maxSnakeLen.value = 15;
+    // const O = boardWidth.value * boardHeight.value;
+    // const ptr = (((I + instance.exports.snakeOffset.value)) % instance.exports.maxSnakeLen.value) * 2 + O;
+    // const ptr2 = instance.exports.getSnakeXPtrByOffset(I);
+    // boardData[ptr] = 34;
+    // const x2 = instance.exports.getSnakeXByOffset(I);
+    // const x = boardData[ptr];
+    // console.log(ptr, ptr2)
+    // console.log(x, x2)
+
+    // return;
 
     console.log(instance);
     console.log(instance.exports.add(5, 6));
@@ -40,6 +54,7 @@ async function main() {
     canvas.height = boardHeight.value * blockSize;
     const ctx = canvas.getContext('2d');
     function drawBoard() {
+        console.log('00 -> ', boardData[0]);
         for (let y = 0; y < boardHeight.value; y++) {
             for (let x = 0; x < boardWidth.value; x++) {
                 const v = boardData[y * boardWidth.value + x];
@@ -49,15 +64,17 @@ async function main() {
                 } else if (v === 2) { // cherry
                     color = 'red';
                 }
-                ctx.beginPath();
+                // ctx.beginPath();
                 ctx.fillStyle = color;
                 ctx.fillRect(x * blockSize, y * blockSize, blockSize, blockSize);
-                ctx.closePath();
+                // ctx.closePath();
+
             }
         }
     }
 
     setInterval(() => {
+        drawBoard();
         instance.exports.tick();
         instance.exports.drawBoard();
         // console.log('offset', instance.exports.snakeOffset.value);
@@ -65,14 +82,52 @@ async function main() {
         // console.log('snake.x = ', snakeData[
         //     (instance.exports.snakeOffset.value * 2) % instance.exports.maxSnakeLen.value
         // ]);
-        drawBoard();
-    }, 200);
-    
-    setTimeout(() => {
-        console.log(instance.exports.snakeDir)
+        printSnake();
+    }, 300);
+
+    function printSnake() {
+        const offset = instance.exports.snakeOffset.value;
+        const snakeLen = instance.exports.snakeLength.value;
+        const maxLen = instance.exports.maxSnakeLen.value;
+        const out = [];
+        const out2 = [];
+        console.log('offset=', offset);
+        console.log('len=', snakeLen);
+        for (let i = 0; i < snakeLen; i++) {
+            const ptr = (i + offset) % maxLen;
+            const x = snakeData[ptr * 2];
+            const y = snakeData[ptr * 2 + 1];
+            out.push(`${x},${y}`);
+            const x2 = instance.exports.getSnakeXByOffset(i);
+            if (x !== x2) {
+                const O = boardWidth.value * boardHeight.value;
+                const _ = instance.exports.getSnakeXPtrByOffset(i);
+                const __ = ptr * 2 + O;
+                debugger;
+            }
+        }
+        console.log('snake=\n');
+        console.log(out.join('\n'));
         
-        // instance.exports.snakeDir.value = 1;
-    }, 1000);
+    }
+    function printSnake2() {
+        const offset = instance.exports.snakeOffset.value;
+        const snakeLen = instance.exports.snakeLength.value;
+        const maxLen = instance.exports.maxSnakeLen.value;
+        const out = [];
+        console.log('offset=', offset);
+        console.log('len=', snakeLen);
+        for (let i = 0; i < maxLen; i++) {
+            const ptr = (i + offset) % maxLen;
+            const x = snakeData[i * 2];
+            const y = snakeData[i * 2 + 1];
+            out.push(x);
+            out.push(y);
+        }
+        console.log('snake=', out.map(x=>x.toString()).map(x => x.length ===1?'0'+x:x).join(' '));
+        // console.log(outy.join(' '));
+    }
+    
     document.addEventListener('keydown', (e) => {
         const newDir = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].indexOf(e.key);
         if (newDir === -1) return;
