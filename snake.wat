@@ -270,8 +270,17 @@
 
     ;; get block pixel type (0-blank, 1-snake, 2-cherry)
     (func $computePixelState (param $x i32) (param $y i32) (result i32)
-        (local $snakeHeadX i32)
-        (local $snakeHeadY i32)
+        get_local $x
+        get_local $y
+        call $touchingSnake
+        i32.const 0
+        i32.ne
+        if
+            i32.const 1
+            return
+        end
+        
+        ;; check cherry
         get_local $x
         get_local $y
         get_global $cherryX
@@ -281,15 +290,9 @@
             i32.const 2
             return
         end
-        get_local $x
-        get_local $y
-        call $touchingSnake
-        i32.eqz
-        if
-            i32.const 0
-            return
-        end
-        i32.const 1
+        
+        ;; no collision
+        i32.const 0
         return
     )
 
