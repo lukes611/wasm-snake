@@ -80,22 +80,29 @@
     (func $drawBoard
         (local $x i32)
         (local $y i32)
+        (local $tmp i32)
         ;; setup x, y
         i32.const 0
         set_local $y
 
         ;; looping
         loop $yBlock
-            ;; inc y
-            i32.const 1
-            get_local $y
-            i32.add
-            set_local $y
-
             ;; loop x
             i32.const 0
             set_local $x
             loop $xBlock
+
+                ;; get coord state
+                get_local $x
+                get_local $y
+                call $computePixelState
+                set_local $tmp
+
+                ;; set coord state
+                get_local $x
+                get_local $y
+                get_local $tmp
+                call $setPixel
 
                 ;; inc x
                 i32.const 1
@@ -107,10 +114,15 @@
                 get_local $x
                 get_global $boardHeight
                 i32.lt_s
-                br_if $yBlock
+                br_if $xBlock
             end
             ;; end loop x
 
+            ;; inc y
+            i32.const 1
+            get_local $y
+            i32.add
+            set_local $y
 
             ;; break if less than
             get_local $y
@@ -121,6 +133,54 @@
         ;; loop y
         ;; loop x
 
+    )
+
+    ;; get block pixel type (0-blank, 1-snake, 2-cherry)
+    (func $computePixelState (param $x i32) (param $y i32) (result i32)
+        get_local $x
+        get_local $y
+        get_global $cherryX
+        get_global $cherryY
+        call $posEq
+        if
+            i32.const 2
+            return
+        end
+        i32.const 0
+        return
+    )
+
+    (func $posEq (param $x1 i32) (param $y1 i32) (param $x2 i32) (param $y2 i32) (result i32)
+        (local $xEq i32)
+        (local $yEq i32)
+        get_local $x1
+        get_local $x2
+        i32.sub
+        i32.eqz
+        i32.eqz
+        if ;; if x1 != x2
+            i32.const 0
+            return
+        end
+        get_local $y1
+        get_local $y2
+        i32.sub
+        i32.eqz
+        return
+    )
+
+
+
+    ;; sets a pixel value
+    (func $setPixel (param $x i32) (param $y i32) (param $v i32)
+        (local $idx i32)
+        get_global $boardWidth
+        get_local $y
+        i32.mul
+        get_local $x
+        i32.add
+        get_local $v
+        i32.store8
     )
 
     ;; get a random x pos on the board
