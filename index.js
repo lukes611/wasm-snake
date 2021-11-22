@@ -35,7 +35,7 @@ async function main() {
     instance.exports.drawBoard();
     console.log('fin');
     document.body.appendChild(canvas);
-    const blockSize = 20;
+    const blockSize = 8;
     canvas.width = boardWidth.value * blockSize;
     canvas.height = boardHeight.value * blockSize;
     const ctx = canvas.getContext('2d');
@@ -58,7 +58,20 @@ async function main() {
     }
 
     setInterval(() => {
+        instance.exports.tick();
+        // console.log('snake.x = ', snakeData[0]);
+        instance.exports.drawBoard();
         drawBoard();
     }, 200);
+
+    setTimeout(() => {
+        console.log(instance.exports.snakeDir)
+        instance.exports.snakeDir.value = 1;
+    }, 1000);
+    document.addEventListener('keydown', (e) => {
+        const newDir = ['ArrowRight', 'ArrowDown', 'ArrowLeft', 'ArrowUp'].indexOf(e.key);
+        if (newDir === -1) return;
+        instance.exports.snakeDir.value = newDir;
+    });
 }
 main();

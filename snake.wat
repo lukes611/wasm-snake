@@ -83,11 +83,41 @@
         set_global $cherryY
     )
 
-    ;; (export "tick" (func $tick))
-    ;; (func $tick
-    ;;     ;; get new head
-    ;;     ;; set it (later implement push / pop system)
-    ;; )
+    (export "tick" (func $tick))
+    (func $tick
+        (local $headX i32)
+        (local $headY i32)
+        ;; get new head
+        i32.const 0
+        call $getSnakeXByOffset
+        set_local $headX
+        i32.const 0
+        call $getSnakeYByOffset
+        set_local $headY
+
+        get_local $headX
+        get_global $snakeDir
+        call $getMoveX
+        set_local $headX
+
+        get_local $headY
+        get_global $snakeDir
+        call $getMoveY
+        set_local $headY
+
+        i32.const 0
+        call $getSnakeXPtrByOffset
+        get_local $headX
+        i32.store8
+
+        i32.const 0
+        call $getSnakeYPtrByOffset
+        get_local $headY
+        i32.store8
+
+
+        ;; set it (later implement push / pop system)
+    )
 
     ;; computes a new x, given a movement by 1 in a direction (see snakeDir at top)
     (func $getMoveX (param $oldX i32) (param $direction i32) (result i32)
