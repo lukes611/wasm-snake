@@ -1,3 +1,1 @@
-if snake hits self -> die
-game can be reset
-game is larger
+show code + cannot move backwards

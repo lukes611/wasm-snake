@@ -14,7 +14,8 @@ async function main() {
                 throw new Error(`Aborted, code: ${code}`);
             },
             gameOver: () => {
-                console.log('game over');
+                resetGameButton.style.display = 'block';
+                gameOverMessage.style.display = 'block';
             },
         },
     });
@@ -29,12 +30,6 @@ async function main() {
             [2, 'red'], // red for cherry
         ]),
     );
-    const resetGameButton = document.createElement('button');
-    resetGameButton.innerText = 'reset';
-    document.body.appendChild(resetGameButton);
-    resetGameButton.onclick = () => {
-        instance.exports.init();
-    };
 
     console.log(instance.exports.init());
 
@@ -73,5 +68,21 @@ async function main() {
             }
         };
     }
+
+    const gameOverMessage = document.createElement('h4');
+    gameOverMessage.innerText = 'game over';
+    document.body.appendChild(gameOverMessage);
+    gameOverMessage.style.display = 'none';
+    
+    const resetGameButton = document.createElement('button');
+    resetGameButton.innerText = 'reset';
+    document.body.appendChild(resetGameButton);
+    resetGameButton.onclick = () => {
+        resetGameButton.style.display = 'none';
+        gameOverMessage.style.display = 'none';
+        instance.exports.init();
+    };
+    resetGameButton.style.display = 'none';
+
 }
 main();
