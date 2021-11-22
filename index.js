@@ -82,8 +82,8 @@ async function main() {
         // console.log('snake.x = ', snakeData[
         //     (instance.exports.snakeOffset.value * 2) % instance.exports.maxSnakeLen.value
         // ]);
-        printSnake();
-    }, 300);
+        // printSnake();
+    }, 100);
 
     function printSnake() {
         const offset = instance.exports.snakeOffset.value;
